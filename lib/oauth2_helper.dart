@@ -217,16 +217,14 @@ class OAuth2Helper {
     try {
       headers['Authorization'] = 'Bearer ' + tknResp.accessToken;
       headers['Accept'] = 'application/json';
+      headers['content-type'] = 'application/json';
       resp = await httpClient.put(Uri.parse(url), body: body, headers: headers);
       print('Body ${resp.body}');
 
       if (resp.statusCode == 401) {
-        print('Response is 401');
         if (tknResp.hasRefreshToken()) {
-          print('Response Fetch Refresh Token');
           tknResp = await refreshToken(tknResp.refreshToken);
         } else {
-          print('Response Fetch Token');
           tknResp = await fetchToken();
         }
 
@@ -240,8 +238,6 @@ class OAuth2Helper {
       resp.request.headers.forEach((key, value) {
         print("Header Name $key Header Value $value");
       });
-      print("Headers ${resp.request.headers}");
-      print("Url ${resp.request.url}");
     } catch (e) {
       print(e);
       rethrow;
