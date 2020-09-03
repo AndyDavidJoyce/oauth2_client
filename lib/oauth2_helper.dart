@@ -225,7 +225,7 @@ class OAuth2Helper {
 
         if (tknResp != null) {
           headers['Authorization'] = 'Bearer ' + tknResp.accessToken;
-          resp = await httpClient.post(url, body: body, headers: headers);
+          resp = await httpClient.put(url, body: body, headers: headers);
         }
       }
     } catch (e) {
