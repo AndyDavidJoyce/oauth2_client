@@ -217,8 +217,8 @@ class OAuth2Helper {
     try {
       headers['Authorization'] = 'Bearer ' + tknResp.accessToken;
       headers['Accept'] = 'application/json';
-      headers['Content-Type'] = 'application/x-www-form-urlencoded';
       resp = await httpClient.put(Uri.parse(url), body: body, headers: headers);
+      print('Body ${resp.body}');
 
       if (resp.statusCode == 401) {
         print('Response is 401');
@@ -232,8 +232,6 @@ class OAuth2Helper {
 
         if (tknResp != null) {
           headers['Authorization'] = 'Bearer ' + tknResp.accessToken;
-          headers['Accept'] = 'application/json';
-          headers['Content-Type'] = 'application/x-www-form-urlencoded';
           resp = await httpClient.put(Uri.parse(url),
               body: body, headers: headers);
         }
@@ -245,6 +243,7 @@ class OAuth2Helper {
       print("Headers ${resp.request.headers}");
       print("Url ${resp.request.url}");
     } catch (e) {
+      print(e);
       rethrow;
     }
     return resp;
