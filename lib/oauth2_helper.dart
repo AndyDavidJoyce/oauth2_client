@@ -214,7 +214,9 @@ class OAuth2Helper {
 
     try {
       headers['Authorization'] = 'Bearer ' + tknResp.accessToken;
-      resp = await httpClient.put(url, body: body, headers: headers);
+      headers['Accept'] = 'application/json';
+      headers['Content-Type'] = 'application/x-www-form-urlencoded';
+      resp = await httpClient.put(Uri.parse(url), body: body, headers: headers);
 
       if (resp.statusCode == 401) {
         if (tknResp.hasRefreshToken()) {
@@ -228,6 +230,10 @@ class OAuth2Helper {
           resp = await httpClient.put(url, body: body, headers: headers);
         }
       }
+
+      print(resp);
+      print("Headers ${resp.request.headers}");
+      print("Url ${resp.request.url}");
     } catch (e) {
       rethrow;
     }
