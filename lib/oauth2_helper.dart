@@ -1,4 +1,5 @@
 import 'package:oauth2_client/access_token_response.dart';
+import 'package:oauth2_client/invalid_grant_exception.dart';
 import 'package:oauth2_client/oauth2_exception.dart';
 import 'package:oauth2_client/oauth2_client.dart';
 import 'package:http/http.dart' as http;
@@ -118,29 +119,34 @@ class OAuth2Helper {
   }
 
   /// Performs a refresh_token request using the [refreshToken].
-  Future<AccessTokenResponse> refreshToken(String refreshToken) async {
+  Future<AccessTokenResponse> refreshToken(String refreshToken,
+      {bool returnInvalid = false}) async {
     var tknResp;
 
     tknResp = await client.refreshToken(refreshToken,
         clientId: clientId, clientSecret: clientSecret);
 
-    if (tknResp == null) {
-      throw OAuth2Exception('Unexpected error');
-    } else if (tknResp.isValid()) {
-      //If the response doesn't contain a refresh token, keep using the current one
-      if (!tknResp.hasRefreshToken()) {
-        tknResp.refreshToken = refreshToken;
-      }
-      await tokenStorage.addToken(tknResp);
+    if (returnInvalid) {
+      await tokenStorage.deleteToken(scopes);
+      throw InvalidGrantException();
     } else {
-      if (tknResp.error == 'invalid_grant') {
-        //The refresh token is expired too
-        await tokenStorage.deleteToken(scopes);
-        //Fetch another access token
-        tknResp = await getToken();
+      if (tknResp == null) {
+        throw OAuth2Exception('Unexpected error');
+      } else if (tknResp.isValid()) {
+        //If the response doesn't contain a refresh token, keep using the current one
+        if (!tknResp.hasRefreshToken()) {
+          tknResp.refreshToken = refreshToken;
+        }
+        await tokenStorage.addToken(tknResp);
       } else {
-        throw OAuth2Exception(tknResp.error,
-            errorDescription: tknResp.errorDescription);
+        if (tknResp.error == 'invalid_grant') {
+          //The refresh token is expired too
+          await tokenStorage.deleteToken(scopes);
+          throw InvalidGrantException();
+        } else {
+          throw OAuth2Exception(tknResp.error,
+              errorDescription: tknResp.errorDescription);
+        }
       }
     }
 
@@ -242,7 +248,9 @@ class OAuth2Helper {
   ///
   /// If no token already exists, or if it is exipired, a new one is requested.
   Future<http.Response> get(String url,
-      {Map<String, String> headers, httpClient}) async {
+      {Map<String, String> headers,
+      httpClient,
+      bool testRefreshToken = false}) async {
     httpClient ??= http.Client();
 
     headers ??= {};
@@ -257,7 +265,8 @@ class OAuth2Helper {
 
       if (resp.statusCode == 401) {
         if (tknResp.hasRefreshToken()) {
-          tknResp = await refreshToken(tknResp.refreshToken);
+          tknResp = await refreshToken(tknResp.refreshToken,
+              returnInvalid: testRefreshToken);
         } else {
           tknResp = await fetchToken();
         }
