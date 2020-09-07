@@ -123,11 +123,14 @@ class OAuth2Helper {
       {bool returnInvalid = false}) async {
     var tknResp;
 
+    print('Refresh token. Return invalid set to $returnInvalid');
+
     tknResp = await client.refreshToken(refreshToken,
         clientId: clientId, clientSecret: clientSecret);
 
     if (returnInvalid) {
       await tokenStorage.deleteToken(scopes);
+      print('Throw Invalid Grant Exception');
       throw InvalidGrantException();
     } else {
       if (tknResp == null) {
@@ -263,17 +266,23 @@ class OAuth2Helper {
       headers['Authorization'] = 'Bearer ' + tknResp.accessToken;
       resp = await httpClient.get(url, headers: headers);
 
-      if (resp.statusCode == 401) {
-        if (tknResp.hasRefreshToken()) {
-          tknResp = await refreshToken(tknResp.refreshToken,
-              returnInvalid: testRefreshToken);
-        } else {
-          tknResp = await fetchToken();
-        }
+      if (testRefreshToken) {
+        print('Force refresh token');
+        tknResp = await refreshToken(tknResp.refreshToken,
+            returnInvalid: testRefreshToken);
+      } else {
+        if (resp.statusCode == 401) {
+          if (tknResp.hasRefreshToken()) {
+            tknResp = await refreshToken(tknResp.refreshToken,
+                returnInvalid: testRefreshToken);
+          } else {
+            tknResp = await fetchToken();
+          }
 
-        if (tknResp != null) {
-          headers['Authorization'] = 'Bearer ' + tknResp.accessToken;
-          resp = await httpClient.get(url, headers: headers);
+          if (tknResp != null) {
+            headers['Authorization'] = 'Bearer ' + tknResp.accessToken;
+            resp = await httpClient.get(url, headers: headers);
+          }
         }
       }
     } catch (e) {
