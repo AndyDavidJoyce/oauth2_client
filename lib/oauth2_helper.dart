@@ -292,8 +292,22 @@ class OAuth2Helper {
     return resp;
   }
 
-  Future<bool> removeToken() async {
+  Future<bool> removeToken() {
     return tokenStorage.deleteToken(scopes);
+  }
+
+  Future<bool> hasValidToken() async {
+    var tknResp = await getTokenFromStorage();
+
+    if (tknResp != null) {
+      if (tknResp.refreshNeeded()) {
+        return false;
+      } else {
+        return true;
+      }
+    } else {
+      return false;
+    }
   }
 
   void _validateAuthorizationParams() {
