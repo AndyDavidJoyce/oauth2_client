@@ -292,6 +292,10 @@ class OAuth2Helper {
     return resp;
   }
 
+  Future<bool> removeToken() async {
+    return tokenStorage.deleteToken(scopes);
+  }
+
   void _validateAuthorizationParams() {
     switch (grantType) {
       case AUTHORIZATION_CODE:
