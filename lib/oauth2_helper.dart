@@ -300,12 +300,7 @@ class OAuth2Helper {
     var tknResp = await getTokenFromStorage();
 
     if (tknResp != null) {
-      if (tknResp.refreshNeeded()) {
-        await tokenStorage.deleteToken(scopes);
-        return false;
-      } else {
-        return true;
-      }
+      return true;
     } else {
       return false;
     }
