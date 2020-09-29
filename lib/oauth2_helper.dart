@@ -301,6 +301,7 @@ class OAuth2Helper {
 
     if (tknResp != null) {
       if (tknResp.refreshNeeded()) {
+        await tokenStorage.deleteToken(scopes);
         return false;
       } else {
         return true;
