@@ -196,7 +196,7 @@ void main() {
           clientSecret: clientSecret,
           scopes: scopes);
 
-      var tknResp = await hlp.refreshToken(refreshToken);
+      var tknResp = await hlp.refreshToken(refreshToken, scopes);
 
       expect(tknResp.isValid(), true);
       expect(tknResp.accessToken, accessToken);
@@ -253,7 +253,7 @@ void main() {
           clientSecret: clientSecret,
           scopes: scopes);
 
-      expect(() async => await hlp.refreshToken(refreshToken),
+      expect(() async => await hlp.refreshToken(refreshToken, scopes),
           throwsA(isInstanceOf<OAuth2Exception>()));
     });
 
@@ -537,7 +537,7 @@ void main() {
           clientSecret: clientSecret,
           scopes: scopes);
 
-      var tknResp = await hlp.refreshToken(refreshToken);
+      var tknResp = await hlp.refreshToken(refreshToken, scopes);
 
       expect(tknResp.isValid(), true);
       expect(tknResp.accessToken, accessToken);
@@ -568,7 +568,7 @@ void main() {
           clientSecret: clientSecret,
           scopes: scopes);
 
-      var tknResp = await hlp.refreshToken(refreshToken);
+      var tknResp = await hlp.refreshToken(refreshToken, scopes);
 
       expect(tknResp.isValid(), true);
       expect(tknResp.refreshToken, refreshToken);

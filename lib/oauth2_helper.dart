@@ -74,7 +74,7 @@ class OAuth2Helper {
     if (tknResp != null) {
       if (tknResp.refreshNeeded()) {
         //The access token is expired
-        tknResp = await refreshToken(tknResp.refreshToken);
+        tknResp = await refreshToken(tknResp.refreshToken, tknResp.scope);
       }
     } else {
       tknResp = await fetchToken();
@@ -119,18 +119,16 @@ class OAuth2Helper {
   }
 
   /// Performs a refresh_token request using the [refreshToken].
-  Future<AccessTokenResponse> refreshToken(String refreshToken,
+  Future<AccessTokenResponse> refreshToken(
+      String refreshToken, List<String> scope,
       {bool returnInvalid = false}) async {
-    var tknResp;
-
-    print('Refresh token. Return invalid set to $returnInvalid');
+    AccessTokenResponse tknResp;
 
     tknResp = await client.refreshToken(refreshToken,
         clientId: clientId, clientSecret: clientSecret);
 
     if (returnInvalid) {
       await tokenStorage.deleteToken(scopes);
-      print('Throw Invalid Grant Exception');
       throw InvalidGrantException();
     } else {
       if (tknResp == null) {
@@ -140,6 +138,9 @@ class OAuth2Helper {
         if (!tknResp.hasRefreshToken()) {
           tknResp.refreshToken = refreshToken;
         }
+
+        tknResp.scope ??= scope;
+
         await tokenStorage.addToken(tknResp);
       } else {
         if (tknResp.error == 'invalid_grant') {
@@ -192,7 +193,7 @@ class OAuth2Helper {
 
       if (resp.statusCode == 401) {
         if (tknResp.hasRefreshToken()) {
-          tknResp = await refreshToken(tknResp.refreshToken);
+          tknResp = await refreshToken(tknResp.refreshToken, tknResp.scope);
         } else {
           tknResp = await fetchToken();
         }
@@ -229,7 +230,7 @@ class OAuth2Helper {
 
       if (resp.statusCode == 401) {
         if (tknResp.hasRefreshToken()) {
-          tknResp = await refreshToken(tknResp.refreshToken);
+          tknResp = await refreshToken(tknResp.refreshToken, tknResp.scope);
         } else {
           tknResp = await fetchToken();
         }
@@ -267,13 +268,12 @@ class OAuth2Helper {
       resp = await httpClient.get(url, headers: headers);
 
       if (testRefreshToken) {
-        print('Force refresh token');
-        tknResp = await refreshToken(tknResp.refreshToken,
+        tknResp = await refreshToken(tknResp.refreshToken, tknResp.scope,
             returnInvalid: testRefreshToken);
       } else {
         if (resp.statusCode == 401) {
           if (tknResp.hasRefreshToken()) {
-            tknResp = await refreshToken(tknResp.refreshToken,
+            tknResp = await refreshToken(tknResp.refreshToken, tknResp.scope,
                 returnInvalid: testRefreshToken);
           } else {
             tknResp = await fetchToken();
