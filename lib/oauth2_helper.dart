@@ -74,7 +74,7 @@ class OAuth2Helper {
     if (tknResp != null) {
       if (tknResp.refreshNeeded()) {
         //The access token is expired
-        tknResp = await refreshToken(tknResp.refreshToken, tknResp.scope);
+        tknResp = await refreshToken(tknResp.refreshToken);
       }
     } else {
       tknResp = await fetchToken();
@@ -119,8 +119,7 @@ class OAuth2Helper {
   }
 
   /// Performs a refresh_token request using the [refreshToken].
-  Future<AccessTokenResponse> refreshToken(
-      String refreshToken, List<String> scope,
+  Future<AccessTokenResponse> refreshToken(String refreshToken,
       {bool returnInvalid = false}) async {
     AccessTokenResponse tknResp;
 
@@ -139,7 +138,7 @@ class OAuth2Helper {
           tknResp.refreshToken = refreshToken;
         }
 
-        tknResp.scope ??= scope;
+        tknResp.scope ??= scopes;
 
         await tokenStorage.addToken(tknResp);
       } else {
@@ -193,7 +192,7 @@ class OAuth2Helper {
 
       if (resp.statusCode == 401) {
         if (tknResp.hasRefreshToken()) {
-          tknResp = await refreshToken(tknResp.refreshToken, tknResp.scope);
+          tknResp = await refreshToken(tknResp.refreshToken);
         } else {
           tknResp = await fetchToken();
         }
@@ -230,7 +229,7 @@ class OAuth2Helper {
 
       if (resp.statusCode == 401) {
         if (tknResp.hasRefreshToken()) {
-          tknResp = await refreshToken(tknResp.refreshToken, tknResp.scope);
+          tknResp = await refreshToken(tknResp.refreshToken);
         } else {
           tknResp = await fetchToken();
         }
@@ -268,12 +267,12 @@ class OAuth2Helper {
       resp = await httpClient.get(url, headers: headers);
 
       if (testRefreshToken) {
-        tknResp = await refreshToken(tknResp.refreshToken, tknResp.scope,
+        tknResp = await refreshToken(tknResp.refreshToken,
             returnInvalid: testRefreshToken);
       } else {
         if (resp.statusCode == 401) {
           if (tknResp.hasRefreshToken()) {
-            tknResp = await refreshToken(tknResp.refreshToken, tknResp.scope,
+            tknResp = await refreshToken(tknResp.refreshToken,
                 returnInvalid: testRefreshToken);
           } else {
             tknResp = await fetchToken();
