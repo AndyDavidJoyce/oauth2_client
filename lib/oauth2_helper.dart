@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:oauth2_client/access_token_response.dart';
 import 'package:oauth2_client/invalid_grant_exception.dart';
 import 'package:oauth2_client/oauth2_exception.dart';
@@ -25,6 +27,7 @@ class OAuth2Helper {
   String clientId;
   String clientSecret;
   List<String> scopes;
+  int timeout;
 
   Function afterAuthorizationCodeCb;
 
@@ -39,7 +42,8 @@ class OAuth2Helper {
       this.tokenStorage,
       this.afterAuthorizationCodeCb,
       this.authCodeParams,
-      this.accessTokenParams}) {
+      this.accessTokenParams,
+      this.timeout = 30}) {
     tokenStorage ??= TokenStorage(client.tokenUrl);
   }
 
@@ -199,7 +203,10 @@ class OAuth2Helper {
 
         if (tknResp != null) {
           headers['Authorization'] = 'Bearer ' + tknResp.accessToken;
-          resp = await httpClient.post(url, body: body, headers: headers);
+          resp = await httpClient
+              .post(url, body: body, headers: headers)
+              .timeout(Duration(seconds: timeout));
+          ;
         }
       }
     } catch (e) {
@@ -236,8 +243,10 @@ class OAuth2Helper {
 
         if (tknResp != null) {
           headers['Authorization'] = 'Bearer ' + tknResp.accessToken;
-          resp = await httpClient.put(Uri.parse(url),
-              body: body, headers: headers);
+          resp = await httpClient
+              .put(Uri.parse(url), body: body, headers: headers)
+              .timeout(Duration(seconds: timeout));
+          ;
         }
       }
     } catch (e) {
@@ -252,7 +261,7 @@ class OAuth2Helper {
   /// If no token already exists, or if it is exipired, a new one is requested.
   Future<http.Response> get(String url,
       {Map<String, String> headers,
-      httpClient,
+      http.Client httpClient,
       bool testRefreshToken = false}) async {
     httpClient ??= http.Client();
 
@@ -280,7 +289,9 @@ class OAuth2Helper {
 
           if (tknResp != null) {
             headers['Authorization'] = 'Bearer ' + tknResp.accessToken;
-            resp = await httpClient.get(url, headers: headers);
+            resp = await httpClient
+                .get(url, headers: headers)
+                .timeout(Duration(seconds: timeout));
           }
         }
       }
