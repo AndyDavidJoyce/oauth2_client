@@ -1,11 +1,11 @@
 import 'dart:io';
 
-import 'package:oauth2_client/access_token_response.dart';
-import 'package:oauth2_client/invalid_grant_exception.dart';
-import 'package:oauth2_client/oauth2_exception.dart';
-import 'package:oauth2_client/oauth2_client.dart';
 import 'package:http/http.dart' as http;
 import 'package:meta/meta.dart';
+import 'package:oauth2_client/access_token_response.dart';
+import 'package:oauth2_client/invalid_grant_exception.dart';
+import 'package:oauth2_client/oauth2_client.dart';
+import 'package:oauth2_client/oauth2_exception.dart';
 import 'package:oauth2_client/oauth2_response.dart';
 import 'package:oauth2_client/src/token_storage.dart';
 
@@ -111,8 +111,7 @@ class OAuth2Helper {
           accessTokenParams: accessTokenParams,
           afterAuthorizationCodeCb: afterAuthorizationCodeCb);
     } else if (grantType == CLIENT_CREDENTIALS) {
-      tknResp = await client.getTokenWithClientCredentialsFlow(
-          clientId: clientId, clientSecret: clientSecret, scopes: scopes);
+      tknResp = await client.getTokenWithClientCredentialsFlow(clientId: clientId, clientSecret: clientSecret, scopes: scopes);
     }
 
     if (tknResp != null && tknResp.isValid()) {
@@ -123,12 +122,10 @@ class OAuth2Helper {
   }
 
   /// Performs a refresh_token request using the [refreshToken].
-  Future<AccessTokenResponse> refreshToken(String refreshToken,
-      {bool returnInvalid = false}) async {
+  Future<AccessTokenResponse> refreshToken(String refreshToken, {bool returnInvalid = false}) async {
     AccessTokenResponse tknResp;
 
-    tknResp = await client.refreshToken(refreshToken,
-        clientId: clientId, clientSecret: clientSecret);
+    tknResp = await client.refreshToken(refreshToken, clientId: clientId, clientSecret: clientSecret);
 
     if (returnInvalid) {
       await tokenStorage.deleteToken(scopes);
@@ -151,8 +148,7 @@ class OAuth2Helper {
           await tokenStorage.deleteToken(scopes);
           throw InvalidGrantException();
         } else {
-          throw OAuth2Exception(tknResp.error,
-              errorDescription: tknResp.errorDescription);
+          throw OAuth2Exception(tknResp.error, errorDescription: tknResp.errorDescription);
         }
       }
     }
@@ -168,10 +164,7 @@ class OAuth2Helper {
 
     if (tknResp != null) {
       await tokenStorage.deleteToken(scopes);
-      return await client.revokeToken(tknResp,
-          clientId: clientId,
-          clientSecret: clientSecret,
-          httpClient: httpClient);
+      return await client.revokeToken(tknResp, clientId: clientId, clientSecret: clientSecret, httpClient: httpClient);
     } else {
       return OAuth2Response();
     }
@@ -180,8 +173,7 @@ class OAuth2Helper {
   /// Performs a post request to the specified [url], adding the authorization token.
   ///
   /// If no token already exists, or if it is exipired, a new one is requested.
-  Future<http.Response> post(String url,
-      {Map<String, String> headers, dynamic body, httpClient}) async {
+  Future<http.Response> post(String url, {Map<String, String> headers, dynamic body, httpClient}) async {
     httpClient ??= http.Client();
 
     headers ??= {};
@@ -203,9 +195,7 @@ class OAuth2Helper {
 
         if (tknResp != null) {
           headers['Authorization'] = 'Bearer ' + tknResp.accessToken;
-          resp = await httpClient
-              .post(url, body: body, headers: headers)
-              .timeout(Duration(seconds: timeout));
+          resp = await httpClient.post(url, body: body, headers: headers);
           ;
         }
       }
@@ -218,8 +208,7 @@ class OAuth2Helper {
   /// Performs a put request to the specified [url], adding the authorization token.
   ///
   /// If no token already exists, or if it is exipired, a new one is requested.
-  Future<http.Response> put(String url,
-      {Map<String, String> headers, dynamic body, httpClient}) async {
+  Future<http.Response> put(String url, {Map<String, String> headers, dynamic body, httpClient}) async {
     httpClient ??= http.Client();
 
     headers ??= {};
@@ -243,9 +232,7 @@ class OAuth2Helper {
 
         if (tknResp != null) {
           headers['Authorization'] = 'Bearer ' + tknResp.accessToken;
-          resp = await httpClient
-              .put(Uri.parse(url), body: body, headers: headers)
-              .timeout(Duration(seconds: timeout));
+          resp = await httpClient.put(Uri.parse(url), body: body, headers: headers);
           ;
         }
       }
@@ -259,10 +246,7 @@ class OAuth2Helper {
   /// Performs a get request to the specified [url], adding the authorization token.
   ///
   /// If no token already exists, or if it is exipired, a new one is requested.
-  Future<http.Response> get(String url,
-      {Map<String, String> headers,
-      http.Client httpClient,
-      bool testRefreshToken = false}) async {
+  Future<http.Response> get(String url, {Map<String, String> headers, http.Client httpClient, bool testRefreshToken = false}) async {
     httpClient ??= http.Client();
 
     headers ??= {};
@@ -276,22 +260,18 @@ class OAuth2Helper {
       resp = await httpClient.get(url, headers: headers);
 
       if (testRefreshToken) {
-        tknResp = await refreshToken(tknResp.refreshToken,
-            returnInvalid: testRefreshToken);
+        tknResp = await refreshToken(tknResp.refreshToken, returnInvalid: testRefreshToken);
       } else {
         if (resp.statusCode == 401) {
           if (tknResp.hasRefreshToken()) {
-            tknResp = await refreshToken(tknResp.refreshToken,
-                returnInvalid: testRefreshToken);
+            tknResp = await refreshToken(tknResp.refreshToken, returnInvalid: testRefreshToken);
           } else {
             tknResp = await fetchToken();
           }
 
           if (tknResp != null) {
             headers['Authorization'] = 'Bearer ' + tknResp.accessToken;
-            resp = await httpClient
-                .get(url, headers: headers)
-                .timeout(Duration(seconds: timeout));
+            resp = await httpClient.get(url, headers: headers);
           }
         }
       }
